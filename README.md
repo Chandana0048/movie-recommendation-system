@@ -1,8 +1,5 @@
 # 🎬 Netflix-Style Movie Recommender
 
-
-
-
 A content-based movie recommendation system built using Python and scikit-learn.
 
 ## 🚀 Features
@@ -14,7 +11,18 @@ A content-based movie recommendation system built using Python and scikit-learn.
 - Python
 - pandas
 - scikit-learn
-- Streamlit (soon)
+- Streamlit 
+
+## 🔧 Features
+- Genre-based movie similarity
+- Personalized user history
+- TMDB poster fetching (secure)
+- Most popular movies log
+
+## 🚀 Run Locally
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
 
 
 
@@ -29,11 +37,3 @@ A content-based movie recommendation system built using Python and scikit-learn.
 
 
 
-
-Enhance your current model:
-
-Add movie taglines, cast, or overview to your content features.
-
-Use TF-IDF instead of CountVectorizer for better semantic results.
-
-Show genres or similarity scores in the UI.
