@@ -5,13 +5,29 @@ import requests
 import re
 
 # --- TMDB API KEY ---
-TMDB_API_KEY = "68c33ba4ac785bb7f555874ba9ccfaed"
+TMDB_API_KEY = "your key here"
 
 # --- Step 1: Load and Prepare Dataset ---
 def load_data():
     df = pd.read_csv("data/movies.csv")
-    df['title'] = df['title'].str.replace(r"\(\d+\)", "", regex=True)
+
+    # Remove year from title like "Titanic (1997)" → "Titanic"
+    df['title'] = df['title'].str.replace(r"\(\d{4}\)", "", regex=True).str.strip()
+
+    # Reformat titles like "Postman, The" → "The Postman"
+    def normalize_title(title):
+        title = title.strip()
+        if "," in title:
+            parts = title.split(",")
+            if len(parts) == 2 and parts[1].strip().lower() in ["the", "a", "an"]:
+                return f"{parts[1].strip()} {parts[0].strip()}"
+        return title
+
+    df['title'] = df['title'].apply(normalize_title)
+
+    # Create feature string from genres for content-based filtering
     df["features"] = df["genres"].str.replace("|", " ", regex=False)
+
     return df
 
 # --- Step 2: Build Similarity Matrix ---
@@ -37,10 +53,10 @@ def recommend(title, df, similarity, top_n=5):
 
 # --- Step 4: Clean Movie Title for TMDB API ---
 def clean_title(title):
-    # Remove parentheses content like (Il Postino)
+    # Remove anything in parentheses
     title = re.sub(r'\(.*?\)', '', title).strip()
 
-    # Convert "Postman, The" to "The Postman"
+    # Convert "Movie, The" to "The Movie"
     if "," in title:
         parts = title.split(",")
         if len(parts) == 2 and parts[1].strip().lower() in ["the", "a", "an"]:
@@ -48,16 +64,22 @@ def clean_title(title):
 
     return title
 
-# --- Step 5: Fetch Movie Poster from TMDB ---
+# --- Step 5: Fetch Poster from TMDB ---
 def fetch_poster(movie_title):
+    
     cleaned_title = clean_title(movie_title)
     print(f"🔍 Searching poster for cleaned title: '{cleaned_title}'")
 
     url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={cleaned_title}"
 
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
+
     for attempt in range(3):
         try:
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, timeout=5, headers=headers)
             response.raise_for_status()
             data = response.json()
 
